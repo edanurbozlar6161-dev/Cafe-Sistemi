@@ -1,0 +1,74 @@
+{% extends "cafe/panel/base.html" %}
+{% block nav_urun %}aktif{% endblock %}
+
+{% block panel %}
+<div class="panel-header"><h1>{{ baslik }}</h1></div>
+
+<div class="panel-form-card">
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    {% if urun and urun.image %}
+      <div class="mevcut-foto">
+        <img src="{{ urun.image.url }}" alt="{{ urun.name }}">
+        <span class="text-muted2">Mevcut görsel<br>(değiştirmek için yeni seçin)</span>
+      </div>
+    {% endif %}
+
+    <div class="form-satir">
+      <label class="form-label">Kategori</label>
+      {{ form.category }}
+      {% for e in form.category.errors %}<div class="form-hata">{{ e }}</div>{% endfor %}
+    </div>
+
+    <div class="form-satir">
+      <label class="form-label">Ürün Adı</label>
+      {{ form.name }}
+      {% for e in form.name.errors %}<div class="form-hata">{{ e }}</div>{% endfor %}
+    </div>
+
+    <div class="form-satir">
+      <label class="form-label">Açıklama</label>
+      {{ form.description }}
+    </div>
+
+    <div class="row">
+      <div class="col-6 form-satir">
+        <label class="form-label">Fiyat (₺)</label>
+        {{ form.price }}
+        {% for e in form.price.errors %}<div class="form-hata">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="col-6 form-satir">
+        <label class="form-label">Stok Adedi</label>
+        {{ form.stock_count }}
+        <small class="text-muted2">Kaç adet mevcut (ör. 25). Sipariş verildikçe otomatik azalır; 0 olunca menüde “Tükendi” görünür.</small>
+        {% for e in form.stock_count.errors %}<div class="form-hata">{{ e }}</div>{% endfor %}
+      </div>
+    </div>
+
+    <div class="form-satir">
+      <label class="form-label">Görünüm Sırası</label>
+      {{ form.sira }}
+      <small class="text-muted2">Ürünün menüde/listede görünme sırası — küçük numara önce gelir. Fark etmiyorsa 0 bırakın.</small>
+    </div>
+
+    <div class="form-satir">
+      <label class="form-label">Görsel</label>
+      {{ form.image }}
+      <small class="text-muted2">JPG/PNG. Yeni görsel seçmezseniz mevcut görsel korunur.</small>
+      {% for e in form.image.errors %}<div class="form-hata">{{ e }}</div>{% endfor %}
+    </div>
+
+    <div class="form-check">
+      {{ form.stock_status }}
+      <label class="form-check-label">Satışta (menüde göster — kapatırsanız stok olsa bile menüde çıkmaz)</label>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button class="btn-cafe" type="submit">💾 Kaydet</button>
+      <a href="{% url 'cafe:panel' %}" class="btn-ghost">İptal</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

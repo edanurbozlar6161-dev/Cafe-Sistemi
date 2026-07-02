@@ -1,0 +1,79 @@
+{% extends "cafe/panel/base.html" %}
+{% block nav_urun %}aktif{% endblock %}
+
+{% block panel %}
+<div class="panel-header">
+  <div>
+    <h1>Ürün Yönetimi</h1>
+    <p class="text-muted2">Menüdeki ürünleri buradan yönetin — değişiklikler menüye anında yansır.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'cafe:panel_kategori_ekle' %}" class="btn-ghost">+ Kategori</a>
+    <a href="{% url 'cafe:panel_urun_ekle' %}" class="btn-cafe">+ Yeni Ürün</a>
+  </div>
+</div>
+
+<div class="stat-grid">
+  <div class="stat-card"><div class="sayi">{{ urun_sayisi }}</div><div>Ürün</div></div>
+  <div class="stat-card"><div class="sayi">{{ kategori_sayisi }}</div><div>Kategori</div></div>
+  <div class="stat-card"><div class="sayi">{{ masa_sayisi }}</div><div>Masa</div></div>
+  <div class="stat-card uyari"><div class="sayi">{{ stokta_yok }}</div><div>Stokta Yok</div></div>
+</div>
+
+{% for kat in kategoriler %}
+  <h2 class="panel-kat">{{ kat.emoji }} {{ kat.name }} <span>· {{ kat.urunler.count }} ürün</span></h2>
+  <div class="urun-tablo">
+    {% for urun in kat.urunler.all %}
+      <div class="urun-satir">
+        {% if urun.image %}
+          <img src="{{ urun.image.url }}" alt="{{ urun.name }}">
+        {% else %}
+          <div class="foto-bos"></div>
+        {% endif %}
+        <div class="urun-ad">
+          <b>{{ urun.name }}</b>
+          <span class="text-muted2">{{ urun.description|default:"—" }}</span>
+        </div>
+        <div class="urun-fiyat">{{ urun.price|floatformat:0 }} ₺</div>
+        <span class="stok-adet {% if urun.stock_count == 0 %}bitti{% endif %}">📦 {{ urun.stock_count }} adet</span>
+        <button class="stok-btn {% if urun.stock_status %}var{% else %}yok{% endif %}" data-id="{{ urun.id }}"
+                title="Menüde satışta mı?">
+          {% if urun.stock_status %}Satışta{% else %}Pasif{% endif %}
+        </button>
+        <a href="{% url 'cafe:panel_urun_duzenle' urun.id %}" class="islem duzenle">Düzenle</a>
+        <form method="post" action="{% url 'cafe:panel_urun_sil' urun.id %}"
+              onsubmit="return confirm('“{{ urun.name }}” silinsin mi?');" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="islem sil">Sil</button>
+        </form>
+      </div>
+    {% empty %}
+      <p class="text-muted2" style="padding:8px 4px;">Bu kategoride ürün yok.</p>
+    {% endfor %}
+  </div>
+{% empty %}
+  <p class="text-muted2">Henüz kategori yok. Önce bir kategori ekleyin.</p>
+{% endfor %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  function getCookie(n){const m=document.cookie.match("(^|;)\\s*"+n+"\\s*=\\s*([^;]+)");return m?m.pop():"";}
+  document.querySelectorAll(".stok-btn").forEach((b) => {
+    b.addEventListener("click", async () => {
+      const r = await fetch(`/yonetim/urun/${b.dataset.id}/stok/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": getCookie("csrftoken") },
+      });
+      const d = await r.json();
+      if (d.ok) {
+        b.classList.toggle("var", d.stock_status);
+        b.classList.toggle("yok", !d.stock_status);
+        b.textContent = d.stock_status ? "Satışta" : "Pasif";
+      }
+    });
+  });
+})();
+</script>
+{% endblock %}

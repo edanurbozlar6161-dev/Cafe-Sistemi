@@ -1,0 +1,99 @@
+{% extends "cafe/base.html" %}
+{% load static %}
+{% block title %}Menü — Manuçak{% endblock %}
+
+{% block body %}
+<div class="app-shell menu-wrap">
+  {% csrf_token %}
+
+  <!-- Üst bar -->
+  <div class="topbar">
+    <div class="brand"><span class="cup">☕</span> Manuçak</div>
+    <div class="masa-chip">Masa {{ masa.table_number }}</div>
+  </div>
+
+  <!-- Kategori sekmeleri -->
+  <div class="kategori-tabs" id="kategoriTabs">
+    {% for kat in kategoriler %}
+      <div class="kategori-tab {% if forloop.first %}active{% endif %}" data-target="kat-{{ kat.id }}">
+        {{ kat.emoji }} {{ kat.name }}
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Ürünler -->
+  <div class="urun-bolumler">
+    {% for kat in kategoriler %}
+      <h2 class="kategori-baslik" id="kat-{{ kat.id }}">{{ kat.emoji }} {{ kat.name }}</h2>
+      <div class="urun-list">
+        {% for urun in kat.urunler.all %}
+          <div class="urun-card {% if not urun.satista %}tukendi{% endif %}">
+            {% if not urun.satista %}<span class="tukendi-rozet">Tükendi</span>{% endif %}
+            {% if urun.image %}
+              <img class="foto" src="{{ urun.image.url }}" alt="{{ urun.name }}" loading="lazy">
+            {% else %}
+              <div class="foto"></div>
+            {% endif %}
+            <div class="bilgi">
+              <h4>{{ urun.name }}</h4>
+              <p class="aciklama">{{ urun.description }}</p>
+              <div class="alt">
+                <span class="fiyat">{{ urun.price|floatformat:0 }} ₺</span>
+                <div class="urun-aksiyon" data-id="{{ urun.id }}">
+                  {% if urun.satista %}
+                    <button class="ekle-btn"
+                            data-id="{{ urun.id }}"
+                            data-name="{{ urun.name }}"
+                            data-price="{{ urun.price|floatformat:0 }}">+</button>
+                  {% else %}
+                    <button class="ekle-btn" disabled>+</button>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Sepet alt çubuğu -->
+  <div class="sepet-bar" id="sepetBar" data-bs-toggle="modal" data-bs-target="#sepetModal">
+    <div class="ozet">
+      <span class="sayac" id="sepetSayac">0</span>
+      <span>Sepetim</span>
+    </div>
+    <div class="git"><span id="sepetToplam">0 ₺</span> · Görüntüle →</div>
+  </div>
+
+  <!-- Sepet modalı -->
+  <div class="modal fade" id="sepetModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">🛒 Sepetim — Masa {{ masa.table_number }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="sepetIcerik"></div>
+          <div class="mt-3">
+            <label class="form-label">Sipariş notu (opsiyonel)</label>
+            <textarea class="form-control" id="siparisNotu" rows="2"
+                      placeholder="Örn: Şekersiz olsun, soğansız..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer d-flex flex-column gap-2" style="border:none;">
+          <div class="toplam-satir w-100">
+            <span>Toplam</span><span id="modalToplam">0 ₺</span>
+          </div>
+          <button class="btn-cafe w-100" id="siparisVerBtn">Siparişi Ver →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'cafe/js/menu.js' %}"></script>
+{% endblock %}

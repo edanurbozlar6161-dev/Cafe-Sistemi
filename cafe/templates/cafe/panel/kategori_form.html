@@ -1,0 +1,37 @@
+{% extends "cafe/panel/base.html" %}
+{% block nav_urun %}aktif{% endblock %}
+
+{% block panel %}
+<div class="panel-header"><h1>{{ baslik }}</h1></div>
+
+<div class="panel-form-card">
+  <form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <div class="form-satir">
+      <label class="form-label">Kategori Adı</label>
+      {{ form.name }}
+      {% for e in form.name.errors %}<div class="form-hata">{{ e }}</div>{% endfor %}
+    </div>
+
+    <div class="row">
+      <div class="col-6 form-satir">
+        <label class="form-label">Emoji</label>
+        {{ form.emoji }}
+        <small class="text-muted2">Menüde başlıkta görünür (örn. 🍰)</small>
+      </div>
+      <div class="col-6 form-satir">
+        <label class="form-label">Görünüm Sırası</label>
+        {{ form.sira }}
+        <small class="text-muted2">Menüde kategori sırası (küçük önce)</small>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button class="btn-cafe" type="submit">💾 Kaydet</button>
+      <a href="{% url 'cafe:panel' %}" class="btn-ghost">İptal</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

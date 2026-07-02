@@ -1,0 +1,24 @@
+{% extends "cafe/base.html" %}
+{% block title %}Teşekkürler — Manuçak{% endblock %}
+
+{% block body %}
+<div class="app-shell">
+  <div class="success-wrap">
+    <div class="tik">
+      <svg viewBox="0 0 52 52"><path d="M14 27 l8 8 l16 -18"/></svg>
+    </div>
+    <h1>Ödemeniz Alındı 🎉</h1>
+    <p class="sub text-muted2">Siparişiniz mutfağa iletildi. Afiyet olsun!</p>
+
+    <div class="ozet-kutu">
+      <div class="row2"><span>Sipariş No</span><b>#{{ siparis.id }}</b></div>
+      <div class="row2"><span>Masa</span><b>Masa {{ siparis.table.table_number }}</b></div>
+      <div class="row2"><span>Ödenen Tutar</span><b>{{ siparis.total_price|floatformat:0 }} ₺</b></div>
+      <div class="row2"><span>Ödeme</span><b style="color:var(--success);">Başarılı ✓</b></div>
+    </div>
+
+    <a href="{% url 'cafe:home' %}" class="btn-cafe" style="min-width:220px;">Ana Sayfaya Dön</a>
+    <p class="text-muted2" style="margin-top:24px; font-size:.8rem;">Manuçak · QR Tabanlı Sipariş Sistemi</p>
+  </div>
+</div>
+{% endblock %}

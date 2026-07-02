@@ -1,0 +1,22 @@
+{% extends "cafe/base.html" %}
+{% block title %}Hoş Geldiniz — Manuçak{% endblock %}
+
+{% block body %}
+<div class="app-shell">
+  <div class="welcome">
+    <div class="logo">☕</div>
+    <h1>Hoş Geldiniz</h1>
+    <p class="sub">Siparişinizi telefonunuzdan kolayca verebilir, ödemenizi yerinizden tamamlayabilirsiniz.</p>
+
+    <div class="masa-badge">Oturduğunuz masa: <b>Masa {{ masa.table_number }}</b></div>
+
+    <a href="{% url 'cafe:menu' %}" class="btn-cafe" style="min-width:220px;">
+      Menüye Geç →
+    </a>
+
+    <p class="text-muted2" style="margin-top:26px; font-size:.8rem;">
+      QR Tabanlı Sipariş ve Ödeme Sistemi
+    </p>
+  </div>
+</div>
+{% endblock %}

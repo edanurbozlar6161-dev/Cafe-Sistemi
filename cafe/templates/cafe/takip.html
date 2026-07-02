@@ -1,0 +1,121 @@
+{% extends "cafe/base.html" %}
+{% block title %}Sipariş Takibi — Manuçak{% endblock %}
+
+{% block body %}
+<div class="app-shell">
+  {% csrf_token %}
+  <div class="topbar">
+    <div class="brand"><span class="cup">☕</span> Manuçak</div>
+    <div class="masa-chip">Masa {{ siparis.table.table_number }}</div>
+  </div>
+
+  <div class="page">
+    <h2 class="takip-baslik">Siparişiniz Alındı ✅</h2>
+    <p class="takip-alt">Sipariş #{{ siparis.id }} · mutfağa iletildi</p>
+
+    <!-- Canlı durum çubuğu -->
+    <div class="stepper" id="stepper">
+      <div class="ilerleme" id="ilerleme"></div>
+      <div class="step" data-step="beklemede"><div class="dot">1</div><span>Alındı</span></div>
+      <div class="step" data-step="hazirlaniyor"><div class="dot">2</div><span>Hazırlanıyor</span></div>
+      <div class="step" data-step="hazir"><div class="dot">3</div><span>Hazır</span></div>
+      <div class="step" data-step="teslim"><div class="dot">4</div><span>Teslim</span></div>
+    </div>
+    <p class="text-center text-muted2" style="font-size:.85rem;margin-bottom:18px;">
+      Durum: <b id="durumYazi" style="color:var(--espresso);">{{ siparis.durum_etiketi }}</b>
+      <span class="text-muted2"> · otomatik güncellenir</span>
+    </p>
+
+    <!-- Ödeme durumu -->
+    <div class="odeme-durum {% if siparis.is_paid %}odendi{% else %}bekliyor{% endif %}" id="odemeDurum">
+      {% if siparis.is_paid %}💳 Ödeme alındı{% else %}⏳ Ödeme bekleniyor — yemeğiniz bitince ödeyebilirsiniz{% endif %}
+    </div>
+
+    <!-- Sipariş özeti -->
+    <div class="section-card">
+      <h3>Sipariş Özeti</h3>
+      {% for kalem in siparis.kalemler.all %}
+        <div class="sepet-satir">
+          <div class="ad">{{ kalem.quantity }} × {{ kalem.product.name }}</div>
+          <div class="tutar">{{ kalem.ara_toplam|floatformat:0 }} ₺</div>
+        </div>
+      {% endfor %}
+      {% if siparis.note %}
+        <p class="text-muted2" style="margin-top:10px; font-size:.85rem;">📝 Not: {{ siparis.note }}</p>
+      {% endif %}
+      <div class="toplam-satir" style="margin-top:14px;">
+        <span>Toplam</span><span>{{ siparis.total_price|floatformat:0 }} ₺</span>
+      </div>
+    </div>
+
+    <!-- Aksiyonlar -->
+    <div id="aksiyonlar" class="d-flex flex-column gap-2">
+      {% if siparis.is_paid %}
+        <a href="{% url 'cafe:menu' %}" class="btn-ghost w-100 text-center">← Menüye Dön</a>
+      {% else %}
+        <button class="btn-cafe w-100" id="odeBtn" data-url="{% url 'cafe:odeme' siparis.id %}" disabled>
+          💳 Hesabı Öde · {{ siparis.total_price|floatformat:0 }} ₺
+        </button>
+        <p class="text-center" id="odeNot" style="font-size:.82rem; margin:2px 0 0; color:var(--muted);"></p>
+        <a href="{% url 'cafe:menu' %}" class="btn-ghost w-100 text-center">← Menüye Dön / Yeni Ürün</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  const SIRA = ["beklemede", "hazirlaniyor", "hazir", "teslim"];
+  const steps = [...document.querySelectorAll(".step")];
+
+  function ciz(durum, isPaid, durumYazi) {
+    const idx = SIRA.indexOf(durum);
+    steps.forEach((s, i) => {
+      s.classList.toggle("done", i < idx);
+      s.classList.toggle("active", i === idx);
+    });
+    // nokta merkezleri %12.5 ... %87.5 (toplam %75 aralık)
+    const frac = idx <= 0 ? 0 : idx / (SIRA.length - 1);
+    document.getElementById("ilerleme").style.width = (frac * 75) + "%";
+    if (durumYazi) document.getElementById("durumYazi").textContent = durumYazi;
+
+    // Ödeme butonu yalnızca sipariş "Hazır" (veya Teslim) iken aktif
+    const odeBtn = document.getElementById("odeBtn");
+    const not = document.getElementById("odeNot");
+    if (odeBtn && !isPaid) {
+      const hazir = durum === "hazir" || durum === "teslim";
+      odeBtn.disabled = !hazir;
+      if (hazir) {
+        not.textContent = "Siparişiniz hazır 🎉 Şimdi ödeyebilirsiniz.";
+        not.style.color = "var(--success)";
+      } else {
+        not.textContent = '⏳ Ödeme, siparişiniz "Hazır" olunca açılır.';
+        not.style.color = "var(--muted)";
+      }
+    }
+  }
+
+  async function guncelle() {
+    try {
+      const d = await fetch("/api/order/{{ siparis.id }}/status/").then((r) => r.json());
+      ciz(d.status, d.is_paid, d.status_label);
+    } catch (e) {}
+  }
+
+  // ödeme butonu tıklaması (aktifse ödeme ekranına git)
+  const odeBtnEl = document.getElementById("odeBtn");
+  if (odeBtnEl) {
+    odeBtnEl.addEventListener("click", () => {
+      if (!odeBtnEl.disabled) window.location.href = odeBtnEl.dataset.url;
+    });
+  }
+
+  // ilk çizim (sunucudan gelen değerle)
+  ciz("{{ siparis.status }}", {{ siparis.is_paid|yesno:"true,false" }}, "{{ siparis.durum_etiketi }}");
+  guncelle();
+  setInterval(guncelle, 4000);
+})();
+</script>
+{% endblock %}

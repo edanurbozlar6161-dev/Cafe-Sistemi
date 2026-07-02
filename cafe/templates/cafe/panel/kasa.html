@@ -1,0 +1,46 @@
+{% extends "cafe/panel/base.html" %}
+{% block nav_kasa %}aktif{% endblock %}
+
+{% block panel %}
+<div class="panel-header">
+  <div>
+    <h1>Kasa / Satışlar</h1>
+    <p class="text-muted2">Tüm siparişler ve ciro özeti — teslim edilen siparişler de burada kayıtlı kalır.</p>
+  </div>
+</div>
+
+<div class="stat-grid">
+  <div class="stat-card"><div class="sayi">{{ bugun_ciro|floatformat:0 }} ₺</div><div>Bugünkü Ciro</div></div>
+  <div class="stat-card"><div class="sayi">{{ toplam_ciro|floatformat:0 }} ₺</div><div>Toplam Ciro</div></div>
+  <div class="stat-card uyari"><div class="sayi">{{ bekleyen|floatformat:0 }} ₺</div><div>Ödeme Bekleyen</div></div>
+  <div class="stat-card"><div class="sayi">{{ siparis_sayisi }}</div><div>Toplam Sipariş</div></div>
+</div>
+
+<h2 class="panel-kat">🧾 Siparişler <span>· son {{ siparisler|length }}</span></h2>
+<div class="satis-tablo">
+  {% for s in siparisler %}
+    <div class="satis-satir {% if not s.is_paid %}bekliyor{% endif %}">
+      <div class="s-no">#{{ s.id }}<span>Masa {{ s.table.table_number }}</span></div>
+      <div class="s-zaman">{{ s.created_at|date:"d.m.Y H:i" }}</div>
+      <div class="s-urunler">
+        {% for k in s.kalemler.all %}
+          <span class="s-kalem">{{ k.quantity }}× {{ k.product.name }}</span>
+        {% endfor %}
+      </div>
+      <div class="s-tutar">{{ s.total_price|floatformat:0 }} ₺</div>
+      <div class="s-rozetler">
+        <span class="b-durum b-{{ s.status }}">{{ s.durum_etiketi }}</span>
+        <span class="b-odeme {% if s.is_paid %}odendi{% else %}bekliyor{% endif %}">{{ s.odeme_etiketi }}</span>
+      </div>
+      {% if not s.is_paid %}
+        <form method="post" action="{% url 'cafe:panel_tahsil' s.id %}" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="islem tahsil">💵 Tahsil Et</button>
+        </form>
+      {% endif %}
+    </div>
+  {% empty %}
+    <p class="text-muted2" style="padding:20px;text-align:center;">Henüz sipariş yok.</p>
+  {% endfor %}
+</div>
+{% endblock %}

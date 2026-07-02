@@ -1,0 +1,124 @@
+{% extends "cafe/base.html" %}
+{% block title %}Ödeme — Manuçak{% endblock %}
+
+{% block body %}
+<div class="app-shell">
+  {% csrf_token %}
+  <div class="topbar">
+    <div class="brand"><span class="cup">☕</span> Manuçak</div>
+    <div class="masa-chip">Masa {{ siparis.table.table_number }}</div>
+  </div>
+
+  <div class="page">
+    <h2 style="color:var(--espresso); margin:6px 0 18px;">Ödeme</h2>
+
+    <!-- Sipariş özeti -->
+    <div class="section-card">
+      <h3>Sipariş Özeti · #{{ siparis.id }}</h3>
+      {% for kalem in siparis.kalemler.all %}
+        <div class="sepet-satir">
+          <div class="ad">{{ kalem.quantity }} × {{ kalem.product.name }}</div>
+          <div class="tutar">{{ kalem.ara_toplam|floatformat:0 }} ₺</div>
+        </div>
+      {% endfor %}
+      {% if siparis.note %}
+        <p class="text-muted2" style="margin-top:10px; font-size:.85rem;">
+          📝 Not: {{ siparis.note }}
+        </p>
+      {% endif %}
+      <div class="toplam-satir" style="margin-top:14px;">
+        <span>Toplam</span><span>{{ siparis.total_price|floatformat:0 }} ₺</span>
+      </div>
+    </div>
+
+    <!-- Kart görseli -->
+    <div class="kredi-karti">
+      <div class="chip"></div>
+      <div class="numara" id="kartNoGoster">•••• •••• •••• ••••</div>
+      <div class="satir">
+        <span id="kartIsimGoster">KART SAHİBİ</span>
+        <span id="kartTarihGoster">AA/YY</span>
+      </div>
+    </div>
+
+    <!-- Ödeme formu (mock) -->
+    <div class="section-card">
+      <h3>Kart Bilgileri</h3>
+      <div class="mb-3">
+        <label class="form-label">Kart Numarası</label>
+        <input type="text" class="form-control" id="kartNo" inputmode="numeric"
+               placeholder="0000 0000 0000 0000" maxlength="19" value="4242 4242 4242 4242">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Kart Üzerindeki İsim</label>
+        <input type="text" class="form-control" id="kartIsim" placeholder="Ad Soyad" value="EDANUR BOZLAR">
+      </div>
+      <div class="row">
+        <div class="col-7 mb-3">
+          <label class="form-label">Son Kullanma</label>
+          <input type="text" class="form-control" id="kartTarih" placeholder="AA/YY" maxlength="5" value="12/28">
+        </div>
+        <div class="col-5 mb-3">
+          <label class="form-label">CVV</label>
+          <input type="text" class="form-control" id="kartCvv" inputmode="numeric" placeholder="123" maxlength="3" value="123">
+        </div>
+      </div>
+      <button class="btn-cafe w-100" id="odeBtn">{{ siparis.total_price|floatformat:0 }} ₺ Öde</button>
+      <div class="guvenli-not">🔒 Bu bir demo (sahte) ödeme ekranıdır — gerçek tahsilat yapılmaz.</div>
+    </div>
+
+    <a href="{% url 'cafe:menu' %}" class="btn-ghost w-100 d-block text-center" style="text-decoration:none;">← Menüye Dön</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  function getCookie(n){const m=document.cookie.match("(^|;)\\s*"+n+"\\s*=\\s*([^;]+)");return m?m.pop():"";}
+  const csrf = () => { const i=document.querySelector("[name=csrfmiddlewaretoken]"); return i?i.value:getCookie("csrftoken"); };
+
+  // Kart numarasını 4'erli grupla ve önizlemeye yansıt
+  $("kartNo").addEventListener("input", (e) => {
+    let v = e.target.value.replace(/\D/g, "").slice(0, 16);
+    e.target.value = v.replace(/(.{4})/g, "$1 ").trim();
+    const grp = (v + "••••••••••••••••").slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
+    $("kartNoGoster").textContent = grp;
+  });
+  $("kartIsim").addEventListener("input", (e) =>
+    ($("kartIsimGoster").textContent = e.target.value.toUpperCase() || "KART SAHİBİ"));
+  $("kartTarih").addEventListener("input", (e) => {
+    let v = e.target.value.replace(/\D/g, "").slice(0, 4);
+    if (v.length >= 3) v = v.slice(0, 2) + "/" + v.slice(2);
+    e.target.value = v;
+    $("kartTarihGoster").textContent = v || "AA/YY";
+  });
+  // başlangıç önizlemesi
+  $("kartNo").dispatchEvent(new Event("input"));
+  $("kartIsim").dispatchEvent(new Event("input"));
+  $("kartTarih").dispatchEvent(new Event("input"));
+
+  $("odeBtn").addEventListener("click", async () => {
+    const no = $("kartNo").value.replace(/\s/g, "");
+    if (no.length < 16 || !$("kartIsim").value.trim() || $("kartCvv").value.length < 3) {
+      alert("Lütfen kart bilgilerini eksiksiz doldurun.");
+      return;
+    }
+    const btn = $("odeBtn");
+    btn.disabled = true;
+    btn.textContent = "Ödeniyor...";
+    try {
+      const r = await fetch("/api/payment/confirm/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-CSRFToken": csrf() },
+        body: JSON.stringify({ order_id: {{ siparis.id }} }),
+      });
+      const d = await r.json();
+      if (d.ok) window.location.href = d.redirect;
+      else { alert(d.error || "Ödeme başarısız."); btn.disabled = false; btn.textContent = "Tekrar Dene"; }
+    } catch (e) { alert("Bağlantı hatası."); btn.disabled = false; btn.textContent = "Tekrar Dene"; }
+  });
+})();
+</script>
+{% endblock %}

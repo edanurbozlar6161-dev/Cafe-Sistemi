@@ -1,0 +1,26 @@
+{% extends "cafe/base.html" %}
+{% block title %}Yönetim Girişi — Manuçak{% endblock %}
+
+{% block body %}
+<div class="center-page">
+  <div class="logo" style="width:84px;height:84px;border-radius:24px;background:linear-gradient(135deg,var(--caramel),var(--espresso));display:grid;place-items:center;font-size:2.4rem;box-shadow:var(--shadow);">☕</div>
+  <h1 style="color:var(--espresso);margin-top:16px;">Yönetim Paneli</h1>
+  <p class="sub text-muted2">Devam etmek için giriş yapın</p>
+
+  <form method="post" class="section-card" style="width:100%;max-width:360px;text-align:left;margin-top:10px;">
+    {% csrf_token %}
+    {% if hata %}<div class="panel-mesaj error">{{ hata }}</div>{% endif %}
+    <div class="mb-3">
+      <label class="form-label">Kullanıcı Adı</label>
+      <input type="text" name="username" class="form-control" required autofocus>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Şifre</label>
+      <input type="password" name="password" class="form-control" required>
+    </div>
+    <button type="submit" class="btn-cafe w-100">Giriş Yap</button>
+  </form>
+
+  <a href="{% url 'cafe:home' %}" class="text-muted2" style="margin-top:18px;font-size:.85rem;">← Ana sayfaya dön</a>
+</div>
+{% endblock %}

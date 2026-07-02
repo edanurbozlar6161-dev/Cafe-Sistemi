@@ -1,0 +1,30 @@
+{% extends "cafe/base.html" %}
+{% block title %}Manuçak — Akıllı Kafe{% endblock %}
+
+{% block body %}
+<div class="center-page">
+  <div class="logo" style="width:96px;height:96px;border-radius:28px;background:linear-gradient(135deg,var(--caramel),var(--espresso));display:grid;place-items:center;font-size:3rem;box-shadow:var(--shadow);">☕</div>
+  <h1 style="color:var(--espresso);margin-top:18px;">Manuçak</h1>
+  <p class="sub text-muted2" style="max-width:420px;">
+    QR Tabanlı Sipariş ve Ödeme Sistemi · <b>Demo Girişi</b><br>
+    Gerçekte müşteri masadaki QR'ı okutur. Aşağıdan bir masa seçerek deneyebilirsiniz.
+  </p>
+
+  <div class="masa-grid">
+    {% for masa in masalar %}
+      <a class="masa-kutu" href="{% url 'cafe:masa_giris' masa.uuid %}">
+        <div class="no">{{ masa.table_number }}</div>
+        <div>Masa</div>
+        {% if masa.is_occupied %}<div class="dolu">● Dolu</div>{% else %}<div class="bos">● Boş</div>{% endif %}
+      </a>
+    {% empty %}
+      <p class="text-muted2">Henüz masa yok. <code>python manage.py seed_data</code> çalıştırın.</p>
+    {% endfor %}
+  </div>
+
+  <div style="margin-top:30px; display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
+    <a href="{% url 'cafe:kitchen' %}" class="btn-cafe">👨‍🍳 Mutfak Paneli</a>
+    <a href="{% url 'cafe:panel' %}" class="btn-ghost">⚙️ Yönetim Paneli</a>
+  </div>
+</div>
+{% endblock %}

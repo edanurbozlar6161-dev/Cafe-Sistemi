@@ -1,0 +1,15 @@
+{% extends "cafe/base.html" %}
+{% block title %}QR Gerekli — Manuçak{% endblock %}
+
+{% block body %}
+<div class="app-shell">
+  <div class="center-page">
+    <div class="logo" style="width:84px;height:84px;border-radius:24px;background:linear-gradient(135deg,var(--caramel),var(--espresso));display:grid;place-items:center;font-size:2.6rem;box-shadow:var(--shadow);">📷</div>
+    <h1 style="color:var(--espresso);margin-top:18px;">Masanızı Tanımlayın</h1>
+    <p class="sub text-muted2" style="max-width:320px;">
+      Sipariş verebilmek için lütfen masanızdaki <b>QR kodu</b> telefonunuzla okutun.
+    </p>
+    <a href="{% url 'cafe:home' %}" class="btn-ghost" style="margin-top:18px;">Demo: Masa Seç →</a>
+  </div>
+</div>
+{% endblock %}

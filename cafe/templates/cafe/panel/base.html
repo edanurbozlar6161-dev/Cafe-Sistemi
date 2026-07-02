@@ -1,0 +1,25 @@
+{% extends "cafe/base.html" %}
+{% block title %}Yönetim Paneli — Manuçak{% endblock %}
+{% block body_class %}panel-body{% endblock %}
+
+{% block body %}
+<nav class="panel-top">
+  <div class="brand"><span class="cup">☕</span> Manuçak <span class="rozet">Yönetim</span></div>
+  <div class="panel-nav">
+    <a href="{% url 'cafe:panel' %}" class="{% block nav_urun %}{% endblock %}">📋 Ürünler</a>
+    <a href="{% url 'cafe:panel_kasa' %}" class="{% block nav_kasa %}{% endblock %}">💰 Kasa</a>
+    <a href="{% url 'cafe:kitchen' %}">👨‍🍳 Mutfak</a>
+    <a href="/admin/">⚙️ Django Admin</a>
+    <a href="{% url 'cafe:panel_logout' %}" class="cikis">Çıkış →</a>
+  </div>
+</nav>
+
+<div class="panel-content">
+  {% if messages %}
+    {% for m in messages %}
+      <div class="panel-mesaj {{ m.tags }}">{{ m }}</div>
+    {% endfor %}
+  {% endif %}
+  {% block panel %}{% endblock %}
+</div>
+{% endblock %}
